@@ -8,7 +8,7 @@
 #### Lightweight-VoVNet with _FPNLite_
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
-|:--------:|:---:|:---:|:--:|--|----|----|---|--------|
+|:--------:|:---:|:---:|:--:|--|----|----|--------|
 |MobileNetV2|3.5M|3x|0.022|40.55|47.25|64.58|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
 |V2-19|11.2M|3x|0.034|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
@@ -20,7 +20,7 @@
 
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
-|:--------:|:---:|:---:|:--:|--|----|----|---|--------|
+|:--------:|:---:|:---:|:--:|--|----|----|--------|
 |V2-19-FPN|37.6M|3x|0.040|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
 |R-50-FPN|51.2M|3x|0.047|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
