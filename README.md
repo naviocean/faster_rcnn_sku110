@@ -5,11 +5,20 @@
 
 ### Faster R-CNN on SKU-110K dataset
 
+### Note
+
+We measure the inference time of all models with batch size 1 on the same RTX2080Ti GPU machine.
+
+- pytorch1.4.0
+- CUDA 10.2
+- cuDNN 7.3
+
 #### Lightweight-VoVNet with _FPNLite_
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
 |:--------:|:---:|:---:|:--:|--|----|----|--------|
-|MobileNetV2|3.5M|3x|0.022|40.55|47.25|64.58|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|MobileNetV2-0.5|3.5M|1x|0.037|42.93|44.27|77.31|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|MobileNetV2|3.5M|3x|0.044|40.55|47.25|64.58|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
 |V2-19|11.2M|3x|0.034|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**DW**|6.5M|3x|0.027|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
