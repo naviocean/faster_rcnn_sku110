@@ -17,6 +17,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
 |:--------:|:---:|:---:|:--:|--|----|----|--------|
+|MobileNetV2-0.5**64**|3.5M|1x|0.037|43.31|44.66|78.08|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |MobileNetV2-0.5|3.5M|1x|0.037|42.93|44.27|77.31|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |MobileNetV2|3.5M|3x|0.044|40.55|47.25|64.58|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
@@ -25,6 +26,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 |V2-19-**Slim**|3.1M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**Slim**-**DW**|1.8M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 
+* **64** FPN.OUT_CHANNELS = 64
 * _**DW** and **Slim** denote depthwise separable convolution and a thiner model with half the channel size, respectively._                              
 
 
