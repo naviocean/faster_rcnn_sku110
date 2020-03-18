@@ -31,7 +31,7 @@ class Trainer(DefaultTrainer):
         if output_folder is None:
             output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
         if 'sku110' in dataset_name:
-            return VOCDetectionEvaluator(dataset_name)
+            return VOCDetectionEvaluator(cfg, dataset_name)
 
         evaluator_list = []
         evaluator_type = MetadataCatalog.get(dataset_name).evaluator_type

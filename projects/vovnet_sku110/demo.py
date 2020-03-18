@@ -7,16 +7,13 @@ import time
 import cv2
 import tqdm
 
-from detectron2.config import get_cfg
+
 from detectron2.data.detection_utils import read_image
 from detectron2.utils.logger import setup_logger
-
 from predictor import VisualizationDemo
 from vovnet import add_vovnet_config
-from dataset import register_sku110_voc
-from evaluator import VOCDetectionEvaluator
 from detectron2.config import get_cfg
-from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, launch
+from detectron2.engine import default_setup
 # constants
 WINDOW_NAME = "COCO detections"
 

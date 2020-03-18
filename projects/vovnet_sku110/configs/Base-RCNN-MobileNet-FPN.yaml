@@ -34,7 +34,7 @@ DATASETS:
   TRAIN: ("sku110_train",)
   TEST: ("sku110_test",)
 SOLVER:
-  IMS_PER_BATCH: 6
+  IMS_PER_BATCH: 2
   BASE_LR: 0.02
   STEPS: (60000, 80000)
   MAX_ITER: 90000

@@ -24,11 +24,12 @@ from detectron2.evaluation.evaluator import DatasetEvaluator
 
 class VOCDetectionEvaluator(DatasetEvaluator):
 
-    def __init__(self, dataset_name):
+    def __init__(self, cfg, dataset_name):
         """
         Args:
             dataset_name (str): name of the dataset, e.g., "dataset_test"
         """
+        self._cfg = cfg
         self._dataset_name = dataset_name
         meta = MetadataCatalog.get(dataset_name)
         self._anno_file_template = os.path.join(meta.dirname, "Annotations", "{}.xml")
@@ -47,12 +48,19 @@ class VOCDetectionEvaluator(DatasetEvaluator):
             boxes = instances.pred_boxes.tensor.numpy()
             scores = instances.scores.tolist()
             classes = instances.pred_classes.tolist()
-            for box, score, cls in zip(boxes, scores, classes):
-                xmin, ymin, xmax, ymax = box
-                self._predictions[cls].append(
-                    f"{image_id} {score:.3f} {xmin:.1f} {ymin:.1f} {xmax:.1f} {ymax:.1f}"
-                )
+            r_folders = os.path.join('results', f"{self._cfg['MODEL']['BACKBONE']['NAME']}_{self._dataset_name}")
+            if not os.path.exists(r_folders):
+                os.mkdir(r_folders)
 
+            with open(os.path.join(r_folders, f"{image_id}.txt"), "a") as f:
+
+                for box, score, cls in zip(boxes, scores, classes):
+                    xmin, ymin, xmax, ymax = box
+                    self._predictions[cls].append(
+                        f"{image_id} {score:.3f} {xmin:.1f} {ymin:.1f} {xmax:.1f} {ymax:.1f}"
+                    )
+                    f.write(f"{self._class_names[cls]} {score:.3f} {xmin:.1f} {ymin:.1f} {xmax:.1f} {ymax:.1f}\n")
+            f.close()
     def evaluate(self):
         """
         Returns:

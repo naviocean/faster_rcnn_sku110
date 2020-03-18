@@ -26,6 +26,29 @@ def conv_1x1_bn(inp, oup):
     )
 
 
+def dw_conv1x1(in_channels, out_channels, module_name, postfix,
+               stride=1, kernel_size=1, padding=1):
+    """3x3 convolution with padding"""
+    return [
+        ('{}_{}/dw_conv1x1'.format(module_name, postfix),
+         nn.Conv2d(in_channels, out_channels,
+                   kernel_size=kernel_size,
+                   stride=stride,
+                   padding=padding,
+                   groups=out_channels,
+                   bias=False)),
+        ('{}_{}/pw_conv1x1'.format(module_name, postfix),
+         nn.Conv2d(in_channels, out_channels,
+                   kernel_size=1,
+                   stride=1,
+                   padding=0,
+                   groups=1,
+                   bias=False)),
+        ('{}_{}/pw_norm'.format(module_name, postfix), get_norm(_NORM, out_channels)),
+        ('{}_{}/pw_relu'.format(module_name, postfix), nn.ReLU(inplace=True)),
+    ]
+
+
 class InvertedResidual(nn.Module):
     def __init__(self, inp, oup, stride, expand_ratio):
         super(InvertedResidual, self).__init__()
@@ -71,7 +94,9 @@ class MobileNetV2(Backbone):
     """
     Should freeze bn
     """
-    def __init__(self, cfg, n_class=1000, input_size=224, width_mult=1.):
+
+    def __init__(self, cfg, n_class=1000, input_size=224, multi=1.):
+        print('==================> multi:', multi)
         super(MobileNetV2, self).__init__()
         block = InvertedResidual
         input_channel = 32
@@ -88,13 +113,14 @@ class MobileNetV2(Backbone):
 
         # building first layer
         assert input_size % 32 == 0
-        input_channel = int(input_channel * width_mult)
+
+        input_channel = int(input_channel * multi)
         self.return_features_indices = [3, 6, 13, 17]
         self.return_features_num_channels = []
         self.features = nn.ModuleList([conv_bn(3, input_channel, 2)])
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
-            output_channel = int(c * width_mult)
+            output_channel = int(c * multi)
             for i in range(n):
                 if i == 0:
                     self.features.append(block(input_channel, output_channel, s, expand_ratio=t))
@@ -107,6 +133,8 @@ class MobileNetV2(Backbone):
         self._initialize_weights()
         self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_AT)
 
+        print(self.features)
+        print(self.return_features_indices)
     def _freeze_backbone(self, freeze_at):
         for layer_index in range(freeze_at):
             for p in self.features[layer_index].parameters():
@@ -135,6 +163,7 @@ class MobileNetV2(Backbone):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
 
+
 @BACKBONE_REGISTRY.register()
 def build_mnv2_backbone(cfg, input_shape):
     """
@@ -152,6 +181,47 @@ def build_mnv2_backbone(cfg, input_shape):
     model._out_feature_channels = out_feature_channels
     model._out_feature_strides = out_feature_strides
     return model
+
+
+@BACKBONE_REGISTRY.register()
+def build_mnv2_05_backbone(cfg, input_shape):
+    """
+    Create a MobileNetV2 instance from config.
+    Returns:
+        MobileNetV2: a :class:`MobileNetV2` instance.
+    """
+    out_features = cfg.MODEL.RESNETS.OUT_FEATURES
+
+    out_feature_channels = {"res2": 12, "res3": 16,
+                            "res4": 48, "res5": 160}
+    out_feature_strides = {"res2": 4, "res3": 8, "res4": 16, "res5": 32}
+    model = MobileNetV2(cfg=cfg, multi=0.5)
+    model._out_features = out_features
+    model._out_feature_channels = out_feature_channels
+    model._out_feature_strides = out_feature_strides
+    return model
+
+
+@BACKBONE_REGISTRY.register()
+def build_mobilenetv2_05_fpn_backbone(cfg, input_shape: ShapeSpec):
+    """
+    Args:
+        cfg: a detectron2 CfgNode
+    Returns:
+        backbone (Backbone): backbone module, must be a subclass of :class:`Backbone`.
+    """
+    bottom_up = build_mnv2_05_backbone(cfg, input_shape)
+    in_features = cfg.MODEL.FPN.IN_FEATURES
+    out_channels = cfg.MODEL.FPN.OUT_CHANNELS
+    backbone = FPN(
+        bottom_up=bottom_up,
+        in_features=in_features,
+        out_channels=out_channels,
+        norm=cfg.MODEL.FPN.NORM,
+        top_block=LastLevelMaxPool(),
+        fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
+    )
+    return backbone
 
 
 @BACKBONE_REGISTRY.register()
@@ -174,3 +244,22 @@ def build_mobilenetv2_fpn_backbone(cfg, input_shape: ShapeSpec):
         fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
     )
     return backbone
+
+
+
+
+
+if __name__ == "__main__":
+    from torchsummary import summary
+    from dotmap import DotMap
+    from cfg import cfg
+    cfg = DotMap(cfg)
+    # net = build_mobilenetv2_05_fpn_backbone(cfg, ShapeSpec(channels=3, height=None, width=None, stride=None))
+
+    # pytorch_total_params = sum(p.numel() for p in net.parameters())
+    # print(pytorch_total_params)
+    net = MobileNetV2(cfg)
+    # pytorch_total_params = sum(p.numel() for p in net.parameters())
+    # print(pytorch_total_params)
+    summary(net, (3, 224, 224))
+    # print(net)

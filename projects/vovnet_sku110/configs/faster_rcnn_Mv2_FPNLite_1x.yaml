@@ -7,7 +7,4 @@ MODEL:
 DATASETS:
   TRAIN: ("sku110_train",)
   TEST: ("sku110_test",)
-SOLVER:
-  STEPS: (210000, 250000)
-  MAX_ITER: 270000
-OUTPUT_DIR: "checkpoints/FRCN-MNv2-FPNLite-3x"
+OUTPUT_DIR: "checkpoints/FRCN-MNv2-FPNLite-1x"

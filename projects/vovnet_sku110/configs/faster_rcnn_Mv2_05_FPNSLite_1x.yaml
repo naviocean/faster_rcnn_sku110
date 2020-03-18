@@ -1,0 +1,12 @@
+_BASE_: "Base-RCNN-MobileNet-FPN.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_mobilenetv2_05_fpn_backbone"
+  WEIGHTS: "https://www.dropbox.com/s/7jlkyg9ai5xf8qx/mobilenetv2_0.5-eaa6f9ad.pth?dl=1"
+  MASK_ON: False
+  FPN:
+    OUT_CHANNELS: 64
+DATASETS:
+  TRAIN: ("sku110_train",)
+  TEST: ("sku110_test",)
+OUTPUT_DIR: "checkpoints/FRCN-MNv2-05-FPNSLite-1x"
