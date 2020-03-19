@@ -1,0 +1,12 @@
+_BASE_: "Base-RCNN-ShuffleNet-FPN.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_shufflenetv2_fpn_backbone"
+  WEIGHTS: "https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth"
+  MASK_ON: False
+  FPN:
+    OUT_CHANNELS: 128
+DATASETS:
+  TRAIN: ("sku110_train",)
+  TEST: ("sku110_test",)
+OUTPUT_DIR: "checkpoints/FRCN-ShuffleNetV2-FPNLite-1x"
