@@ -19,7 +19,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 |:--------:|:---:|:---:|:--:|--|----|----|--------|
 |MobileNetV2-0.5-**64**|3.5M|1x|0.033|43.31|44.66|78.08|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |MobileNetV2-0.5|3.5M|1x|0.037|42.93|44.27|77.31|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|MobileNetV2|3.5M|3x|0.044|40.55|47.25|64.58|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|MobileNetV2|3.5M|3x|0.044|52.11|58.72|85.98|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
 |V2-19|11.2M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**DW**|6.5M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
@@ -35,7 +35,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 |V2-19-FPN|37.6M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
 |R-50-FPN|51.2M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|**V2-39-FPN**|52.6M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|**V2-39-FPN**|52.6M|3x|0.071|51.47|57.5|85.5|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 
 
 
