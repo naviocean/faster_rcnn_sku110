@@ -13,10 +13,6 @@ from detectron2.modeling.backbone import Backbone
 from detectron2.modeling.backbone.fpn import FPN, LastLevelMaxPool
 from torchvision.models.utils import load_state_dict_from_url
 
-__all__ = [
-    'ShuffleNetV2', 'shufflenet_v2_x0_5', 'shufflenet_v2_x1_0',
-    'shufflenet_v2_x1_5', 'shufflenet_v2_x2_0'
-]
 
 model_urls = {
     'shufflenetv2_x0.5': 'https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth',
@@ -57,29 +53,29 @@ class InvertedResidual(nn.Module):
         if self.stride > 1:
             self.branch1 = nn.Sequential(
                 self.depthwise_conv(inp, inp, kernel_size=3, stride=self.stride, padding=1),
-                nn.BatchNorm2d(inp),
-                nn.Conv2d(inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
-                nn.BatchNorm2d(branch_features),
+                FrozenBatchNorm2d(inp),
+                Conv2d(inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                FrozenBatchNorm2d(branch_features),
                 nn.ReLU(inplace=True),
             )
         else:
             self.branch1 = nn.Sequential()
 
         self.branch2 = nn.Sequential(
-            nn.Conv2d(inp if (self.stride > 1) else branch_features,
+            Conv2d(inp if (self.stride > 1) else branch_features,
                       branch_features, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(branch_features),
+            FrozenBatchNorm2d(branch_features),
             nn.ReLU(inplace=True),
             self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
-            nn.BatchNorm2d(branch_features),
-            nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(branch_features),
+            FrozenBatchNorm2d(branch_features),
+            Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            FrozenBatchNorm2d(branch_features),
             nn.ReLU(inplace=True),
         )
 
     @staticmethod
     def depthwise_conv(i, o, kernel_size, stride=1, padding=0, bias=False):
-        return nn.Conv2d(i, o, kernel_size, stride, padding, bias=bias, groups=i)
+        return Conv2d(i, o, kernel_size, stride, padding, bias=bias, groups=i)
 
     def forward(self, x):
         if self.stride == 1:
@@ -107,8 +103,8 @@ class ShuffleNetV2(Backbone):
         input_channels = 3
         output_channels = self._stage_out_channels[0]
         self.conv1 = nn.Sequential(
-            nn.Conv2d(input_channels, output_channels, 3, 2, 0, bias=False),
-            nn.BatchNorm2d(output_channels),
+            Conv2d(input_channels, output_channels, 3, 2, 0, bias=False),
+            FrozenBatchNorm2d(output_channels),
             nn.ReLU(inplace=True),
         )
         input_channels = output_channels
@@ -126,14 +122,14 @@ class ShuffleNetV2(Backbone):
 
         output_channels = self._stage_out_channels[-1]
         self.conv5 = nn.Sequential(
-            nn.Conv2d(input_channels, output_channels, kernel_size=1, stride=2, padding=0, bias=False),
-            nn.BatchNorm2d(output_channels),
+            Conv2d(input_channels, output_channels, kernel_size=1, stride=2, padding=0, bias=False),
+            FrozenBatchNorm2d(output_channels),
             nn.ReLU(inplace=True),
         )
 
         self._initialize_weights()
         self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_AT)
-
+        # self.fc = nn.Linear(output_channels, num_classes)
     def _freeze_backbone(self, freeze_at):
         for layer_index in range(freeze_at):
             for p in self.features[layer_index].parameters():
@@ -168,7 +164,7 @@ class ShuffleNetV2(Backbone):
 
 
 @BACKBONE_REGISTRY.register()
-def build_shufflenet_backbone(cfg, input_shape: ShapeSpec):
+def build_shufflenetv2_x1_0_backbone(cfg, input_shape: ShapeSpec):
     """
     Create a MobileNetV2 instance from config.
     Returns:
@@ -187,16 +183,35 @@ def build_shufflenet_backbone(cfg, input_shape: ShapeSpec):
     model._out_feature_strides = out_feature_strides
     return model
 
+@BACKBONE_REGISTRY.register()
+def build_shufflenetv2_x0_5_backbone(cfg, input_shape: ShapeSpec):
+    """
+    Create a MobileNetV2 instance from config.
+    Returns:
+        MobileNetV2: a :class:`MobileNetV2` instance.
+    """
+    out_features = cfg.MODEL.RESNETS.OUT_FEATURES
+    print(cfg.MODEL.RESNETS.OUT_FEATURES)
+    #
+    out_feature_channels = {"res2": 48, "res3": 96,
+                            "res4": 192, "res5": 1024}
+    out_feature_strides = {"res2": 4, "res3": 8, "res4": 16, "res5": 32}
+
+    model = ShuffleNetV2(cfg, [4, 8, 4], [24, 48, 96, 192, 1024])
+    model._out_features = out_features
+    model._out_feature_channels = out_feature_channels
+    model._out_feature_strides = out_feature_strides
+    return model
 
 @BACKBONE_REGISTRY.register()
-def build_shufflenetv2_fpn_backbone(cfg, input_shape: ShapeSpec):
+def build_shufflenetv2_x1_0_fpn_backbone(cfg, input_shape: ShapeSpec):
     """
     Args:
         cfg: a detectron2 CfgNode
     Returns:
         backbone (Backbone): backbone module, must be a subclass of :class:`Backbone`.
     """
-    bottom_up = build_shufflenet_backbone(cfg, input_shape)
+    bottom_up = build_shufflenetv2_x1_0_backbone(cfg, input_shape)
     in_features = cfg.MODEL.FPN.IN_FEATURES
     out_channels = cfg.MODEL.FPN.OUT_CHANNELS
     backbone = FPN(
@@ -209,14 +224,33 @@ def build_shufflenetv2_fpn_backbone(cfg, input_shape: ShapeSpec):
     )
     return backbone
 
+@BACKBONE_REGISTRY.register()
+def build_shufflenetv2_x0_5_fpn_backbone(cfg, input_shape: ShapeSpec):
+    """
+    Args:
+        cfg: a detectron2 CfgNode
+    Returns:
+        backbone (Backbone): backbone module, must be a subclass of :class:`Backbone`.
+    """
+    bottom_up = build_shufflenetv2_x0_5_backbone(cfg, input_shape)
+    in_features = cfg.MODEL.FPN.IN_FEATURES
+    out_channels = cfg.MODEL.FPN.OUT_CHANNELS
+    backbone = FPN(
+        bottom_up=bottom_up,
+        in_features=in_features,
+        out_channels=out_channels,
+        norm=cfg.MODEL.FPN.NORM,
+        top_block=LastLevelMaxPool(),
+        fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
+    )
+    return backbone
 
 if __name__ == "__main__":
     from detectron2.config import get_cfg
     from config import add_vovnet_config
     from detectron2.engine import default_setup, DefaultTrainer
     from detectron2.modeling import build_model
-    from torchsummary import summary
-
+    import collections
 
     def setup():
         """
@@ -234,11 +268,21 @@ if __name__ == "__main__":
 
     cfg = setup()
     net = build_model(cfg)
-    # print(net)
-    # summary(net, (3, 224, 224))
-    # input_size = (3, 224, 224)
-    # if isinstance(input_size, tuple):
-    #     input_size = [input_size]
-    # x = [torch.rand(2, *in_size).type(torch.FloatTensor) for in_size in input_size]
-    # print(x)
-    # net(*x)
+    source_state = load_state_dict_from_url(model_urls['shufflenetv2_x1.0'], progress=True)
+    target_state = net.state_dict()
+    new_target_state = collections.OrderedDict()
+    for target_key, target_value in target_state.items():
+        if 'backbone.bottom_up' in target_key:
+            key = target_key.split('backbone.bottom_up.')
+            if key[1] in source_state.keys():
+                print(key[1])
+                new_target_state[target_key] = source_state[key[1]]
+            else:
+                new_target_state[target_key] = target_state[target_key]
+                print('[WARNING] Not found pre-trained parameters for {}'.format(target_key))
+        else:
+            new_target_state[target_key] = target_state[target_key]
+            print('[WARNING] Not found pre-trained parameters for {}'.format(target_key))
+    net.load_state_dict(new_target_state, strict=False)
+
+    # torch.save(net.state_dict(), 'shufflenetv2_x1.pth')

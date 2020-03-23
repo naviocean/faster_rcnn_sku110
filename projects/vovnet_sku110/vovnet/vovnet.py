@@ -412,3 +412,28 @@ def build_vovnet_fpn_backbone(cfg, input_shape: ShapeSpec):
         fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
     )
     return backbone
+
+
+if __name__ == "__main__":
+    from detectron2.config import get_cfg
+    from config import add_vovnet_config
+    from detectron2.engine import default_setup, DefaultTrainer
+    from detectron2.modeling import build_model
+    from torchsummary import summary
+
+
+    def setup():
+        """
+        Create configs and perform basic setups.
+        """
+        cfg = get_cfg()
+        cfg.MODEL.DEVICE = 'cpu'
+        add_vovnet_config(cfg)
+        cfg.merge_from_file('projects/vovnet_sku110/configs/faster_rcnn_V_19_FPN_1x.yaml')
+        cfg.freeze()
+        default_setup(cfg, {})
+        return cfg
+    cfg = setup()
+    net = build_model(cfg)
+    summary(net,(3,224,224))
+    print(net)

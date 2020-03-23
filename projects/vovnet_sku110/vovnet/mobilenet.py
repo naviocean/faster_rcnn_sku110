@@ -133,8 +133,8 @@ class MobileNetV2(Backbone):
         self._initialize_weights()
         self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_AT)
 
-        print(self.features)
-        print(self.return_features_indices)
+        # print(self.features)
+        # print(self.return_features_indices)
     def _freeze_backbone(self, freeze_at):
         for layer_index in range(freeze_at):
             for p in self.features[layer_index].parameters():
@@ -211,6 +211,7 @@ def build_mobilenetv2_05_fpn_backbone(cfg, input_shape: ShapeSpec):
         backbone (Backbone): backbone module, must be a subclass of :class:`Backbone`.
     """
     bottom_up = build_mnv2_05_backbone(cfg, input_shape)
+
     in_features = cfg.MODEL.FPN.IN_FEATURES
     out_channels = cfg.MODEL.FPN.OUT_CHANNELS
     backbone = FPN(
@@ -233,6 +234,7 @@ def build_mobilenetv2_fpn_backbone(cfg, input_shape: ShapeSpec):
         backbone (Backbone): backbone module, must be a subclass of :class:`Backbone`.
     """
     bottom_up = build_mnv2_backbone(cfg, input_shape)
+    print(type(bottom_up))
     in_features = cfg.MODEL.FPN.IN_FEATURES
     out_channels = cfg.MODEL.FPN.OUT_CHANNELS
     backbone = FPN(
@@ -244,22 +246,3 @@ def build_mobilenetv2_fpn_backbone(cfg, input_shape: ShapeSpec):
         fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
     )
     return backbone
-
-
-
-
-
-if __name__ == "__main__":
-    from torchsummary import summary
-    from dotmap import DotMap
-    from cfg import cfg
-    cfg = DotMap(cfg)
-    # net = build_mobilenetv2_05_fpn_backbone(cfg, ShapeSpec(channels=3, height=None, width=None, stride=None))
-
-    # pytorch_total_params = sum(p.numel() for p in net.parameters())
-    # print(pytorch_total_params)
-    net = MobileNetV2(cfg)
-    # pytorch_total_params = sum(p.numel() for p in net.parameters())
-    # print(pytorch_total_params)
-    summary(net, (3, 224, 224))
-    # print(net)
