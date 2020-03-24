@@ -28,7 +28,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 
 * **64** FPN.OUT_CHANNELS = 64
 * _**DW** and **Slim** denote depthwise separable convolution and a thiner model with half the channel size, respectively._                              
-#### Lightweight with _FPN_
+#### _FPN_
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
 |:--------:|:---:|:---:|:--:|--|----|----|--------|
