@@ -12,7 +12,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 - CUDA 10.2
 - cuDNN 7.3
 
-#### Lightweight-VoVNet with _FPNLite_
+#### Lightweight with _FPNLite_
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
 |:--------:|:---:|:---:|:--:|--|----|----|--------|
@@ -28,7 +28,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 
 * **64** FPN.OUT_CHANNELS = 64
 * _**DW** and **Slim** denote depthwise separable convolution and a thiner model with half the channel size, respectively._                              
-
+#### Lightweight with _FPN_
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
 |:--------:|:---:|:---:|:--:|--|----|----|--------|
