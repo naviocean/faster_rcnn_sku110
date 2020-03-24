@@ -2,7 +2,6 @@
 
 
 
-
 ### Faster R-CNN on SKU-110K dataset
 
 ### Note
@@ -17,9 +16,10 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 
 |Backbone|Param.|lr sched|inference time|AP|AP75|AP50|download|
 |:--------:|:---:|:---:|:--:|--|----|----|--------|
-|MobileNetV2-0.5-**64**|3.5M|1x|0.033|43.31|44.66|78.08|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|MobileNetV2-0.5|3.5M|1x|0.037|42.93|44.27|77.31|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|MobileNetV2-0.5-**64**|N/A|1x|0.033|43.31|44.66|78.08|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|MobileNetV2-0.5|N/A|1x|0.037|42.93|44.27|77.31|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |MobileNetV2|3.5M|3x|0.044|52.11|58.72|85.98|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|ShuffleNetV2-0.5|N/A|1x|0.039|48.17|52.85|82.01|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
 |V2-19|11.2M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**DW**|6.5M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
