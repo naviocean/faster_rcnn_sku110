@@ -41,12 +41,12 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 
 Using this command with `--num-gpus 1`
 ```bash
-python /path/to/vovnet_sku110/train_net.py --config-file /path/to/vovnet_sku110/configs/<config.yaml> --eval-only --num-gpus 1 MODEL.WEIGHTS <model.pth>
+python /path/to/sku110/train_net.py --config-file /path/to/sku110/configs/<config.yaml> --eval-only --num-gpus 1 MODEL.WEIGHTS <model.pth>
 ```
 
 ## Installation
 
-As this vovnet-detectron2 is implemented as a [extension form](https://github.com/youngwanLEE/detectron2/tree/vovnet/projects/VoVNet) (detectron2/projects) upon detectron2, you just install [detectron2](https://github.com/facebookresearch/detectron2) following [INSTALL.md](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).
+As this repository is implemented as a [extension form](https://github.com/youngwanLEE/detectron2/tree/vovnet/projects/VoVNet) (detectron2/projects) upon detectron2, you just install [detectron2](https://github.com/facebookresearch/detectron2) following [INSTALL.md](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).
 
 Prepare for SKU-110K dataset:
 - To download dataset, please visit [here](https://github.com/eg4000/SKU110K_CVPR19)
@@ -57,26 +57,26 @@ Prepare for SKU-110K dataset:
 
 To train a model, run
 ```bash
-python /path/to/vovnet_sku110/train_net.py --config-file /path/to/vovnet_sku110/configs/<config.yaml>
+python /path/to/sku110/train_net.py --config-file /path/to/sku110/configs/<config.yaml>
 ```
 
 For example, to launch end-to-end Faster R-CNN training with VoVNetV2-39 backbone on 8 GPUs,
 one should execute:
 ```bash
-python /path/to/vovnet_sku110/train_net.py --config-file /path/to/vovnet_sku110/configs/faster_rcnn_V_39_FPN_3x.yaml --num-gpus 8
+python /path/to/sku110/train_net.py --config-file /path/to/sku110/configs/faster_rcnn_V_39_FPN_3x.yaml --num-gpus 8
 ```
 
 ## Evaluation
 
 Model evaluation can be done similarly:
 ```bash
-python /path/to/vovnet_sku110/train_net.py --config-file /path/to/vovnet_sku110/configs/faster_rcnn_V_39_FPN_3x.yaml --eval-only MODEL.WEIGHTS <model.pth>
+python /path/to/sku110/train_net.py --config-file /path/to/sku110/configs/faster_rcnn_V_39_FPN_3x.yaml --eval-only MODEL.WEIGHTS <model.pth>
 ```
 
 ## Visualization
 To visual the result, run
 ```bash
-python /path/to/vovnet_sku110/demo.py --config-file /path/to/vovnet_sku110/configs/faster_rcnn_V_39_FPN_3x.yaml --input image.jpg --output image.jpg MODEL.WEIGHTS <model.pth>
+python /path/to/sku110/demo.py --config-file /path/to/sku110/configs/faster_rcnn_V_39_FPN_3x.yaml --input image.jpg --output image.jpg MODEL.WEIGHTS <model.pth>
 ```
 
 
