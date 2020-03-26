@@ -2,7 +2,7 @@ _BASE_: "Base-RCNN-ShuffleNet-FPN.yaml"
 MODEL:
   BACKBONE:
     NAME: "build_shufflenetv2_x1_0_fpn_backbone"
-  WEIGHTS: "https://www.dropbox.com/s/evrd8ypxovfpa12/shufflenetv2_x1.0-1a63e56f.pth?dl=1"
+  WEIGHTS: "https://www.dropbox.com/s/raaqxkm993h2kxb/shufflenetv2_x1.0-72ccf27e.pth?dl=1"
   MASK_ON: False
   FPN:
     OUT_CHANNELS: 128

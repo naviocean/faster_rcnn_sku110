@@ -53,7 +53,7 @@ class InvertedResidual(nn.Module):
         if self.stride > 1:
             self.branch1 = nn.Sequential(
                 self.depthwise_conv(inp, inp, kernel_size=3, stride=self.stride, padding=1),
-                FrozenBatchNorm2d(inp),
+                nn.BatchNorm2d(inp),
                 Conv2d(inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
                 FrozenBatchNorm2d(branch_features),
                 nn.ReLU(inplace=True),
@@ -64,12 +64,12 @@ class InvertedResidual(nn.Module):
         self.branch2 = nn.Sequential(
             Conv2d(inp if (self.stride > 1) else branch_features,
                       branch_features, kernel_size=1, stride=1, padding=0, bias=False),
-            FrozenBatchNorm2d(branch_features),
+            nn.BatchNorm2d(branch_features),
             nn.ReLU(inplace=True),
             self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
-            FrozenBatchNorm2d(branch_features),
+            nn.BatchNorm2d(branch_features),
             Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
-            FrozenBatchNorm2d(branch_features),
+            nn.BatchNorm2d(branch_features),
             nn.ReLU(inplace=True),
         )
 
@@ -102,13 +102,12 @@ class ShuffleNetV2(Backbone):
 
         input_channels = 3
         output_channels = self._stage_out_channels[0]
-        self.conv1 = nn.Sequential(
+        self.features = nn.ModuleList([nn.Sequential(
             Conv2d(input_channels, output_channels, 3, 2, 0, bias=False),
-            FrozenBatchNorm2d(output_channels),
+            nn.BatchNorm2d(output_channels),
             nn.ReLU(inplace=True),
-        )
+        )])
         input_channels = output_channels
-
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
 
         stage_names = ['stage{}'.format(i) for i in [2, 3, 4]]
@@ -117,19 +116,18 @@ class ShuffleNetV2(Backbone):
             seq = [inverted_residual(input_channels, output_channels, stride=2)]
             for i in range(repeats - 1):
                 seq.append(inverted_residual(output_channels, output_channels, stride=1))
-            setattr(self, name, nn.Sequential(*seq))
+            # setattr(self, name, nn.Sequential(*seq))
+            self.features.append(nn.Sequential(*seq))
             input_channels = output_channels
 
         output_channels = self._stage_out_channels[-1]
-        self.conv5 = nn.Sequential(
+        self.features.append(nn.Sequential(
             Conv2d(input_channels, output_channels, kernel_size=1, stride=2, padding=0, bias=False),
-            FrozenBatchNorm2d(output_channels),
+            nn.BatchNorm2d(output_channels),
             nn.ReLU(inplace=True),
-        )
-
+        ))
         self._initialize_weights()
         self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_AT)
-        # self.fc = nn.Linear(output_channels, num_classes)
     def _freeze_backbone(self, freeze_at):
         for layer_index in range(freeze_at):
             for p in self.features[layer_index].parameters():
@@ -151,15 +149,12 @@ class ShuffleNetV2(Backbone):
                 m.bias.data.zero_()
 
     def forward(self, x):
-        features = [self.conv1, self.stage2, self.stage3, self.stage4, self.conv5]
         return_features_indices = [1, 2, 3, 4]
-
         res = []
-        for i, m in enumerate(features):
+        for i, m in enumerate(self.features):
             x = m(x)
             if i in return_features_indices:
                 res.append(x)
-        # x = x.mean([2, 3])  # globalpool
         return {'res{}'.format(i + 2): r for i, r in enumerate(res)}
 
 
@@ -259,7 +254,7 @@ if __name__ == "__main__":
         cfg = get_cfg()
         cfg.MODEL.DEVICE = 'cpu'
         add_vovnet_config(cfg)
-        cfg.merge_from_file('projects/vovnet_sku110/configs/faster_rcnn_ShuffleNetv2_FPNLite_1x.yaml')
+        cfg.merge_from_file('projects/sku110/configs/faster_rcnn_ShuffleNetv2_05_FPNLite_1x.yaml')
         cfg.SOLVER.IMS_PER_BATCH = 1
         cfg.freeze()
         default_setup(cfg, {})
@@ -268,21 +263,31 @@ if __name__ == "__main__":
 
     cfg = setup()
     net = build_model(cfg)
-    source_state = load_state_dict_from_url(model_urls['shufflenetv2_x1.0'], progress=True)
+    source_state = load_state_dict_from_url(model_urls['shufflenetv2_x0.5'], progress=True)
+    # source_state = torch.load('./shufflenetv2_x1.pth')
+    # print(source_state.keys())
     target_state = net.state_dict()
     new_target_state = collections.OrderedDict()
+
+    map = {'features.0': 'conv1' , 'features.1': 'stage2', 'features.2': 'stage3', 'features.3': 'stage4', 'features.4': 'conv5'}
+    # print(source_state.keys())
     for target_key, target_value in target_state.items():
         if 'backbone.bottom_up' in target_key:
             key = target_key.split('backbone.bottom_up.')
-            if key[1] in source_state.keys():
-                print(key[1])
-                new_target_state[target_key] = source_state[key[1]]
+            feature_layer_key = key[1].split('.')
+            feature_layer_key = f'{feature_layer_key[0]}.{feature_layer_key[1]}'
+            search_key = key[1].replace(feature_layer_key, map[feature_layer_key])
+            if search_key in source_state.keys():
+                print(search_key)
+                new_target_state[target_key] = source_state[search_key]
             else:
+                # print(key[1])
                 new_target_state[target_key] = target_state[target_key]
                 print('[WARNING] Not found pre-trained parameters for {}'.format(target_key))
         else:
             new_target_state[target_key] = target_state[target_key]
             print('[WARNING] Not found pre-trained parameters for {}'.format(target_key))
+    print('load new state')
     net.load_state_dict(new_target_state, strict=False)
-
-    # torch.save(net.state_dict(), 'shufflenetv2_x1.pth')
+    #
+    torch.save(net.state_dict(), 'shufflenetv2_x0.5.pth')
