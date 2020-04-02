@@ -23,7 +23,7 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 |ShuffleNetV2|N/A|1x|0.047|52.14|58.77|85.91|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
 |V2-19|11.2M|1x|0.38|38.4|43.4|63.3|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|V2-19-**DW**|6.5M|3x|0.031|32.5|33.9|57.7|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|V2-19-**DW**|6.5M|1x|0.031|32.5|33.9|57.7|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**Slim**|3.1M|1x|0.36|37.9|42.5|63.0|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**Slim**-**DW**|1.8M|3x|0.30|25.6|25.2|47.6|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 
