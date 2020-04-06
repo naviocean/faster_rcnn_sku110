@@ -19,12 +19,13 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 |MobileNetV2-0.5-**64**|N/A|1x|0.033|43.31|44.66|78.08|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |MobileNetV2-0.5|N/A|1x|0.037|42.93|44.27|77.31|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |MobileNetV2|3.5M|3x|0.044|52.11|58.72|85.98|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|MobileNetV2-FLGC|N/A|1x|0.030|50.59|56.05|85.21|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |ShuffleNetV2-0.5|N/A|1x|0.039|48.24|52.95|82.10|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|ShuffleNetV2|N/A|1x|0.047|52.14|58.77|85.91|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|ShuffleNetV2|N/A|1x|0.028|52.60|59.55|86.19|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
-|V2-19|11.2M|1x|0.38|38.4|43.4|63.3|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|V2-19|11.2M|1x|0.038|38.4|43.4|63.3|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**DW**|6.5M|1x|0.031|32.5|33.9|57.7|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|V2-19-**Slim**|3.1M|1x|0.36|37.9|42.5|63.0|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|V2-19-**Slim**|3.1M|1x|0.036|37.9|42.5|63.0|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |V2-19-**Slim**-**DW**|1.8M|3x|0.30|25.6|25.2|47.6|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 
 * **64** FPN.OUT_CHANNELS = 64
