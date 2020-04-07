@@ -23,10 +23,10 @@ We measure the inference time of all models with batch size 1 on the same RTX208
 |ShuffleNetV2-0.5|N/A|1x|0.039|48.24|52.95|82.10|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 |ShuffleNetV2|N/A|1x|0.028|52.60|59.55|86.19|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 ||
-|V2-19|11.2M|1x|0.038|38.4|43.4|63.3|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|V2-19-**DW**|6.5M|1x|0.031|32.5|33.9|57.7|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|V2-19-**Slim**|3.1M|1x|0.036|37.9|42.5|63.0|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
-|V2-19-**Slim**-**DW**|1.8M|3x|0.30|25.6|25.2|47.6|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|V2-19|11.2M|1x|0.034|41.46|44.97|71.32|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|V2-19-**DW**|6.5M|1x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|V2-19-**Slim**|3.1M|1x|0.027|47.68|51.47|82.36|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
+|V2-19-**Slim**-**DW**|1.8M|3x|N/A|N/A|N/A|N/A|<a href="">model</a>&nbsp;\|&nbsp;<a href="">metrics</a>
 
 * **64** FPN.OUT_CHANNELS = 64
 * _**DW** and **Slim** denote depthwise separable convolution and a thiner model with half the channel size, respectively._                              
