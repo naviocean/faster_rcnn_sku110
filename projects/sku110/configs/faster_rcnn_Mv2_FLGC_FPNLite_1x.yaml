@@ -1,0 +1,12 @@
+_BASE_: "Base-RCNN-MobileNet-FPN.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_mobilenetv2_flgc_fpn_backbone"
+  WEIGHTS: "https://www.dropbox.com/s/yduxbc13s3ip6qn/mobilenet_v2_detectron2.pth?dl=1"
+  MASK_ON: False
+  FPN:
+    OUT_CHANNELS: 128
+DATASETS:
+  TRAIN: ("sku110_train",)
+  TEST: ("sku110_test",)
+OUTPUT_DIR: "checkpoints/FRCN-MNv2-FLGC-FPNLite-1x"

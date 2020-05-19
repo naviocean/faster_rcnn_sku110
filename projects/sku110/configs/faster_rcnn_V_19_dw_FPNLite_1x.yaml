@@ -9,4 +9,4 @@ MODEL:
 SOLVER:
   STEPS: (60000, 80000)
   MAX_ITER: 90000
-OUTPUT_DIR: "checkpoints/FRCN-V2-19-dw-FPNLite-3x"
+OUTPUT_DIR: "checkpoints/FRCN-V2-19-dw-FPNLite-1x"

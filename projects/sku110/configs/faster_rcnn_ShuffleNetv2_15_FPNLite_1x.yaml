@@ -1,0 +1,19 @@
+_BASE_: "Base-RCNN-ShuffleNet-FPN.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_shufflenetv2_x1_5_fpn_backbone"
+  MASK_ON: False
+  FPN:
+    OUT_CHANNELS: 128
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.02
+  STEPS: (30000, 50000)
+  MAX_ITER: 60000
+  CHECKPOINT_PERIOD: 1000
+DATASETS:
+  TRAIN: ("sku110_train",)
+  TEST: ("sku110_val",)
+TEST:
+  EVAL_PERIOD: 5000
+OUTPUT_DIR: "checkpoints/FRCN-ShuffleNetV2-15-FPNLite-1x"
