@@ -20,7 +20,7 @@ from detectron2.evaluation import (
 )
 from fvcore.common.file_io import PathManager
 from detectron2.data import MetadataCatalog
-from backbones import add_vovnet_config
+from backbones import add_backbone_config
 from dataset import register_sku110_voc
 from evaluator import VOCDetectionEvaluator
 
@@ -67,7 +67,7 @@ def setup(args):
     Create configs and perform basic setups.
     """
     cfg = get_cfg()
-    add_vovnet_config(cfg)
+    add_backbone_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()

@@ -53,7 +53,7 @@ from detectron2.utils.events import (
     TensorboardXWriter,
 )
 from evaluator import VOCDetectionEvaluator
-from backbones import add_vovnet_config
+from backbones import add_backbone_config
 from dataset import register_sku110_voc
 
 logger = logging.getLogger("detectron2")
@@ -193,7 +193,7 @@ def setup(args):
     """
 
     cfg = get_cfg()
-    add_vovnet_config(cfg)
+    add_backbone_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
