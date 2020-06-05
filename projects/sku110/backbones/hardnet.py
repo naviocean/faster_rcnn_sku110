@@ -13,7 +13,7 @@ from detectron2.layers import Conv2d, FrozenBatchNorm2d, ShapeSpec
 from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
 from detectron2.modeling.backbone import Backbone
 from detectron2.modeling.backbone.fpn import FPN, LastLevelMaxPool
-from torchvision.models.utils import load_state_dict_from_url
+
 
 class Flatten(nn.Module):
     def __init__(self):
@@ -134,35 +134,67 @@ class HarDBlock(nn.Module):
 
 
 class HarDNet(Backbone):
-    def __init__(self, cfg, depth_wise=False, pretrained=True, weight_path=''):
+    def __init__(self, cfg):
         super().__init__()
-        self.depth_wise = depth_wise
-        self.cfg = cfg
+        arch = cfg.MODEL.HARDNET.ARCH
+        depth_wise = cfg.MODEL.HARDNET.DEPTH_WISE
+        self.return_features_indices = [3, 8, 11, 14]
+        # self.return_features_indices = [4, 9, 12, 15]
+        if arch == 85:
+            self.return_features_indices = [3, 6, 11, 16]  # 3 6 8 11 13 16
+            # self.return_features_indices = [4, 7, 12, 18]
+        elif arch == 39:
+            self.return_features_indices = [3, 6, 9, 12]
+            # self.return_features_indices = [4, 7, 10, 13]
+
         first_ch = [32, 64]
         second_kernel = 3
         max_pool = True
-        first_ch = [24, 48]
-        ch_list = [96, 320, 640, 1024]
-        grmul = 1.6
-        gr = [16, 20, 64, 160]
-        n_layers = [4, 16, 8, 4]
-        downSamp = [1, 1, 1, 0]
+        grmul = 1.7
+        drop_rate = 0.1
+
+        # HarDNet68
+        ch_list = [128, 256, 320, 640, 1024]
+        gr = [14, 16, 20, 40, 160]
+        n_layers = [8, 16, 16, 16, 4]
+        downSamp = [1, 0, 1, 1, 0]
+
+        if arch == 85:
+            # HarDNet85
+            first_ch = [48, 96]
+            ch_list = [192, 256, 320, 480, 720, 1280]
+            gr = [24, 24, 28, 36, 48, 256]
+            n_layers = [8, 16, 16, 16, 16, 4]
+            downSamp = [1, 0, 1, 0, 1, 0]
+            drop_rate = 0.2
+        elif arch == 39:
+            # HarDNet39
+            first_ch = [24, 48]
+            ch_list = [96, 320, 640, 1024]
+            grmul = 1.6
+            gr = [16, 20, 64, 160]
+            n_layers = [4, 16, 8, 4]
+            downSamp = [1, 1, 1, 0]
 
         if depth_wise:
             second_kernel = 1
             max_pool = False
+            drop_rate = 0.05
 
         blks = len(n_layers)
         self.base = nn.ModuleList([])
+        out_feature_channels = []
 
         # First Layer: Standard Conv3x3, Stride=2
         self.base.append(
             ConvLayer(in_channels=3, out_channels=first_ch[0], kernel=3,
                       stride=2, bias=False))
-
+        if len(self.base) - 1 in self.return_features_indices:
+            out_feature_channels.append(first_ch[0])
         # Second Layer
         self.base.append(ConvLayer(first_ch[0], first_ch[1], kernel=second_kernel))
-
+        if len(self.base) - 1 in self.return_features_indices:
+            out_feature_channels.append(first_ch[1])
         # Maxpooling or DWConv3x3 downsampling
         if max_pool:
             self.base.append(nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
@@ -175,8 +207,14 @@ class HarDNet(Backbone):
             blk = HarDBlock(ch, gr[i], grmul, n_layers[i], dwconv=depth_wise)
             ch = blk.get_out_ch()
             self.base.append(blk)
+            if len(self.base) - 1 in self.return_features_indices:
+                out_feature_channels.append(ch)
+            if i == blks - 1 and arch == 85:
+                self.base.append(nn.Dropout(0.1))
 
             self.base.append(ConvLayer(ch, ch_list[i], kernel=1))
+            if len(self.base) - 1 in self.return_features_indices:
+                out_feature_channels.append(ch_list[i])
             ch = ch_list[i]
             if downSamp[i] == 1:
                 if max_pool:
@@ -184,22 +222,24 @@ class HarDNet(Backbone):
                 else:
                     self.base.append(DWConvLayer(ch, ch, stride=2))
 
+        self._out_feature_strides = {"stride4": 4, "stride8": 8, "stride16": 16, "stride32": 32}
+        self._out_feature_channels = {k: c for k, c in zip(self._out_feature_strides.keys(), out_feature_channels)}
         self._initialize_weights()
         self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_AT)
 
     def forward(self, x):
-        self.return_features_indices = [4, 7, 10, 13]
-        res = []
+        features = []
         for i, m in enumerate(self.base):
             x = m(x)
 
             if i in self.return_features_indices:
-                res.append(x)
-        return {'res{}'.format(i + 2): r for i, r in enumerate(res)}
+                features.append(x)
+        assert len(self._out_feature_strides.keys()) == len(features)
+        return dict(zip(self._out_feature_strides.keys(), features))
 
     def _freeze_backbone(self, freeze_at):
         for layer_index in range(freeze_at):
-            for p in self.features[layer_index].parameters():
+            for p in self.base[layer_index].parameters():
                 p.requires_grad = False
 
     def _initialize_weights(self):
@@ -219,53 +259,16 @@ class HarDNet(Backbone):
 
 
 @BACKBONE_REGISTRY.register()
-def build_hardnet39_fpn_backbone(cfg, input_shape: ShapeSpec):
+def build_hardnet_fpn_backbone(cfg, input_shape: ShapeSpec):
     """
     Args:
         cfg: a detectron2 CfgNode
     Returns:
         backbone (Backbone): backbone module, must be a subclass of :class:`Backbone`.
     """
-    out_features = cfg.MODEL.RESNETS.OUT_FEATURES
-
-    out_feature_channels = {"res2": 96, "res3": 320,
-                            "res4": 640, "res5": 1024}
-    out_feature_strides = {"res2": 4, "res3": 8, "res4": 16, "res5": 32}
-    bottom_up = HarDNet(cfg, depth_wise=False)
-    bottom_up._out_features = out_features
-    bottom_up._out_feature_channels = out_feature_channels
-    bottom_up._out_feature_strides = out_feature_strides
-
-    in_features = cfg.MODEL.FPN.IN_FEATURES
-    out_channels = cfg.MODEL.FPN.OUT_CHANNELS
-    backbone = FPN(
-        bottom_up=bottom_up,
-        in_features=in_features,
-        out_channels=out_channels,
-        norm=cfg.MODEL.FPN.NORM,
-        top_block=LastLevelMaxPool(),
-        fuse_type=cfg.MODEL.FPN.FUSE_TYPE,
-    )
-    return backbone
-
-
-@BACKBONE_REGISTRY.register()
-def build_hardnet39ds_fpn_backbone(cfg, input_shape: ShapeSpec):
-    """
-    Args:
-        cfg: a detectron2 CfgNode
-    Returns:
-        backbone (Backbone): backbone module, must be a subclass of :class:`Backbone`.
-    """
-    out_features = cfg.MODEL.RESNETS.OUT_FEATURES
-
-    out_feature_channels = {"res2": 96, "res3": 320,
-                            "res4": 640, "res5": 1024}
-    out_feature_strides = {"res2": 4, "res3": 8, "res4": 16, "res5": 32}
-    bottom_up = HarDNet(cfg, depth_wise=True)
-    bottom_up._out_features = out_features
-    bottom_up._out_feature_channels = out_feature_channels
-    bottom_up._out_feature_strides = out_feature_strides
+    _out_features = cfg.MODEL.HARDNET.OUT_FEATURES
+    bottom_up = HarDNet(cfg)
+    bottom_up._out_features = _out_features
 
     in_features = cfg.MODEL.FPN.IN_FEATURES
     out_channels = cfg.MODEL.FPN.OUT_CHANNELS
@@ -282,12 +285,22 @@ def build_hardnet39ds_fpn_backbone(cfg, input_shape: ShapeSpec):
 
 if __name__ == "__main__":
     from detectron2.config import get_cfg
-    from config import add_vovnet_config
+    from config import add_backbone_config
     from detectron2.engine import default_setup, DefaultTrainer
     from detectron2.modeling import build_model
     import collections
+    from torchvision.models.utils import load_state_dict_from_url
     from torchsummary import summary
+    arch = '39'
+    ds = True
+    model_url = {
+        '68': 'https://ping-chao.com/hardnet/hardnet68-5d684880.pth',
+        '68ds': 'https://ping-chao.com/hardnet/hardnet68ds-632474d2.pth',
+        '85': 'https://ping-chao.com/hardnet/hardnet85-a28faa00.pth',
+        '39ds': 'https://ping-chao.com/hardnet/hardnet39ds-0e6c6fa9.pth'
+    }
 
+    str_arch = "{}{}".format(arch, 'ds' if ds else '')
 
     def setup():
         """
@@ -295,38 +308,39 @@ if __name__ == "__main__":
         """
         cfg = get_cfg()
         cfg.MODEL.DEVICE = 'cpu'
-        add_vovnet_config(cfg)
-        cfg.merge_from_file('projects/sku110/configs/faster_rcnn_HarDNet_39DS_FPNLite_1x.yaml')
+        add_backbone_config(cfg)
+        cfg.merge_from_file('projects/sku110/configs/faster_rcnn_HarDNet_68_FPNLite_1x.yaml')
+        cfg.MODEL.HARDNET.ARCH = int(arch)
+        cfg.MODEL.HARDNET.DEPTH_WISE = ds
         cfg.SOLVER.IMS_PER_BATCH = 1
         cfg.freeze()
         default_setup(cfg, {})
         return cfg
 
+
     cfg = setup()
+    # net = build_model(cfg)
     net = build_model(cfg)
-    source_state = load_state_dict_from_url('https://ping-chao.com/hardnet/hardnet39ds-0e6c6fa9.pth',map_location=lambda storage, loc: storage, progress=True)
+    source_state = load_state_dict_from_url(model_url[str_arch],
+                                            map_location=lambda storage, loc: storage, progress=True)
     target_state = net.state_dict()
     new_target_state = collections.OrderedDict()
 
-    map = {'features.0': 'conv1', 'features.1': 'stage2', 'features.2': 'stage3', 'features.3': 'stage4',
-           'features.4': 'conv5'}
-    # print(source_state.keys())
     for target_key, target_value in target_state.items():
         if 'backbone.bottom_up' in target_key:
             key = target_key.split('backbone.bottom_up.')
             new_target_state[target_key] = source_state[key[1]]
+            print('loaded ', key[1])
         else:
-            new_target_state[target_key] = target_state[target_key]
+            # new_target_state[target_key] = target_state[target_key]
             print('[WARNING] Not found pre-trained parameters for {}'.format(target_key))
     print('load new state')
     net.load_state_dict(new_target_state, strict=False)
-    #
-    torch.save(net.state_dict(), 'hardnet39ds.pth')
+    # #
+    torch.save(new_target_state, "hardnet_{}.pth".format(str_arch))
 
-
-    # net = build_model(cfg)
     # print(net)
     # model = build_hardnet39ds_fpn_backbone(cfg)
-    # net = HarDNet(cfg, depth_wise=False)
+    net = HarDNet(cfg)
     # summary(net, (3, 224, 224))
     # print(net)

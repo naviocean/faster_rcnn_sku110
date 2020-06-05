@@ -1,0 +1,21 @@
+_BASE_: "Base-RCNN-HarDNet-FPN.yaml"
+MODEL:
+  HARDNET:
+    ARCH: 68
+  WEIGHTS: "https://www.dropbox.com/s/bispu26y5gaal2r/hardnet_68-5244d120.pth?dl=1"
+  MASK_ON: False
+  FPN:
+    OUT_CHANNELS: 128
+DATASETS:
+  TRAIN: ("sku110_train",)
+  TEST: ("sku110_val",)
+DATALOADER:
+  # proposals are part of the dataset_dicts, and take a lot of RAM
+  NUM_WORKERS: 12
+SOLVER:
+  IMS_PER_BATCH: 8
+  BASE_LR: 0.01
+  LR_SCHEDULER_NAME: "WarmupCosineLR"
+TEST:
+  EVAL_PERIOD: 5000
+OUTPUT_DIR: "checkpoints/FRCN-HarDNet68-FPNLite-1x"

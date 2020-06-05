@@ -95,8 +95,7 @@ class MobileNetV2(Backbone):
     Should freeze bn
     """
 
-    def __init__(self, cfg, n_class=1000, input_size=224, multi=1.):
-        print('==================> multi:', multi)
+    def __init__(self, cfg, input_size=224, multi=1.):
         super(MobileNetV2, self).__init__()
         block = InvertedResidual
         input_channel = 32
@@ -115,7 +114,7 @@ class MobileNetV2(Backbone):
         assert input_size % 32 == 0
 
         input_channel = int(input_channel * multi)
-        self.return_features_indices = [3, 6, 13, 17]
+        self.return_features_indices = cfg.MODEL.MOBILENET.FEATURE_INDICES
         self.return_features_num_channels = []
         self.features = nn.ModuleList([conv_bn(3, input_channel, 2)])
         # building inverted residual blocks
@@ -130,6 +129,9 @@ class MobileNetV2(Backbone):
                 if len(self.features) - 1 in self.return_features_indices:
                     self.return_features_num_channels.append(output_channel)
 
+        self._out_feature_strides = {"stride4": 4, "stride8": 8, "stride16": 16, "stride32": 32}
+        self._out_feature_channels = {k: c for k, c in zip(self._out_feature_strides.keys(), self.return_features_num_channels)}
+
         self._initialize_weights()
         self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_AT)
 
@@ -141,12 +143,14 @@ class MobileNetV2(Backbone):
                 p.requires_grad = False
 
     def forward(self, x):
-        res = []
+        features = []
         for i, m in enumerate(self.features):
             x = m(x)
             if i in self.return_features_indices:
-                res.append(x)
-        return {'res{}'.format(i + 2): r for i, r in enumerate(res)}
+                features.append(x)
+
+        assert len(self._out_feature_strides.keys()) == len(features)
+        return dict(zip(self._out_feature_strides.keys(), features))
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -171,15 +175,9 @@ def build_mnv2_backbone(cfg, input_shape):
     Returns:
         MobileNetV2: a :class:`MobileNetV2` instance.
     """
-    out_features = cfg.MODEL.RESNETS.OUT_FEATURES
-
-    out_feature_channels = {"res2": 24, "res3": 32,
-                            "res4": 96, "res5": 320}
-    out_feature_strides = {"res2": 4, "res3": 8, "res4": 16, "res5": 32}
+    out_features = cfg.MODEL.MOBILENET.OUT_FEATURES
     model = MobileNetV2(cfg)
     model._out_features = out_features
-    model._out_feature_channels = out_feature_channels
-    model._out_feature_strides = out_feature_strides
     return model
 
 
@@ -190,15 +188,9 @@ def build_mnv2_05_backbone(cfg, input_shape):
     Returns:
         MobileNetV2: a :class:`MobileNetV2` instance.
     """
-    out_features = cfg.MODEL.RESNETS.OUT_FEATURES
-
-    out_feature_channels = {"res2": 12, "res3": 16,
-                            "res4": 48, "res5": 160}
-    out_feature_strides = {"res2": 4, "res3": 8, "res4": 16, "res5": 32}
+    out_features = cfg.MODEL.MOBILENET.OUT_FEATURES
     model = MobileNetV2(cfg=cfg, multi=0.5)
     model._out_features = out_features
-    model._out_feature_channels = out_feature_channels
-    model._out_feature_strides = out_feature_strides
     return model
 
 

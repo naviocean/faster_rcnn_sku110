@@ -18,7 +18,6 @@ from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
 from detectron2.modeling.backbone import Backbone
 from detectron2.modeling.backbone.fpn import FPN, LastLevelMaxPool
 
-
 # Parameters for the entire model (stem, all blocks, and head)
 GlobalParams = collections.namedtuple('GlobalParams', [
     'width_coefficient', 'depth_coefficient', 'image_size', 'dropout_rate',
@@ -224,8 +223,6 @@ class Conv2dStaticSamePadding(nn.Conv2d):
         return x
 
 
-
-
 class MaxPool2dDynamicSamePadding(nn.MaxPool2d):
     """2D MaxPooling like TensorFlow's 'SAME' mode, with a dynamic image size.
        The padding is operated in forward function by calculating dynamically.
@@ -291,7 +288,6 @@ class Identity(nn.Module):
 
     def forward(self, input):
         return input
-
 
 
 class BlockDecoder(object):
@@ -587,9 +583,25 @@ class EfficientNet(Backbone):
 
     def __init__(self, cfg):
         super().__init__()
-        self._blocks_args, self._global_params = get_model_params(cfg.MODEL.EFFICIENTNET.NAME)
+        arch = cfg.MODEL.EFFICIENTNET.NAME
+        self._blocks_args, self._global_params = get_model_params(arch)
 
-        self.return_features_indices = cfg.MODEL.EFFICIENTNET.FEATURE_INDICES
+        self.return_features_indices = [1, 4, 10, 15]
+
+        if arch == 'efficientnet-b1':
+            self.return_features_indices = [4, 7, 15, 22]
+        elif arch == 'efficientnet-b2':
+            self.return_features_indices = [4, 7, 15, 22]
+        elif arch == 'efficientnet-b3':
+            self.return_features_indices = [4, 7, 17, 25]
+        elif arch == 'efficientnet-b4':
+            self.return_features_indices = [5, 9, 21, 31]
+        elif arch == 'efficientnet-b5':
+            self.return_features_indices = [7, 12, 26, 38]
+        elif arch == 'efficientnet-b6':
+            self.return_features_indices = [8, 14, 30, 44]
+        elif arch == 'efficientnet-b7':
+            self.return_features_indices = [10, 17, 37, 54]
         # Batch norm parameters
         bn_mom = 1 - self._global_params.batch_norm_momentum
         bn_eps = self._global_params.batch_norm_epsilon
@@ -609,7 +621,7 @@ class EfficientNet(Backbone):
 
         # Build blocks
         self._blocks = nn.ModuleList([])
-        num_block = 0
+
         out_feature_channels = []
         for block_args in self._blocks_args:
             input_filters = round_filters(block_args.input_filters, self._global_params)
@@ -623,20 +635,23 @@ class EfficientNet(Backbone):
             )
             # The first block needs to take care of stride and filter size increase.
             self._blocks.append(MBConvBlock(block_args, self._global_params, image_size=image_size))
-            if num_block in self.return_features_indices:
+            if len(self._blocks) - 1 in self.return_features_indices:
                 out_feature_channels.append(output_filters)
-            num_block += 1
+
             image_size = calculate_output_image_size(image_size, block_args.stride)
             if block_args.num_repeat > 1:  # modify block_args to keep same output size
                 block_args = block_args._replace(input_filters=block_args.output_filters, stride=1)
+            print(len(self._blocks) - 1, output_filters)
             for _ in range(block_args.num_repeat - 1):
                 self._blocks.append(MBConvBlock(block_args, self._global_params, image_size=image_size))
-                if num_block in self.return_features_indices:
+                if len(self._blocks) - 1 in self.return_features_indices:
                     out_feature_channels.append(output_filters)
-                num_block +=1
+
+                print(len(self._blocks) - 1, output_filters)
 
         self._out_feature_strides = {"stride4": 4, "stride8": 8, "stride16": 16, "stride32": 32}
         self._out_feature_channels = {k: c for k, c in zip(self._out_feature_strides.keys(), out_feature_channels)}
+        print(out_feature_channels)
         self._initialize_weights()
         self._freeze_backbone(cfg.MODEL.BACKBONE.FREEZE_AT)
 
@@ -689,7 +704,6 @@ class EfficientNet(Backbone):
         return dict(zip(self._out_feature_strides.keys(), features))
 
 
-
 @BACKBONE_REGISTRY.register()
 def build_efficientnet_fpn_backbone(cfg, input_shape: ShapeSpec):
     """
@@ -715,8 +729,6 @@ def build_efficientnet_fpn_backbone(cfg, input_shape: ShapeSpec):
     return backbone
 
 
-
-
 if __name__ == "__main__":
     from detectron2.config import get_cfg
     from config import add_backbone_config
@@ -725,7 +737,8 @@ if __name__ == "__main__":
     import collections
     from torchsummary import summary
     from torchvision.models.utils import load_state_dict_from_url
-    name = 'efficientnet-b0'
+
+    name = 'efficientnet-b6'
 
     model_urls = {
         'efficientnet-b0': 'https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0/efficientnet-b0-355c32eb.pth',
@@ -737,6 +750,8 @@ if __name__ == "__main__":
         'efficientnet-b6': 'https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0/efficientnet-b6-c76e70fd.pth',
         'efficientnet-b7': 'https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0/efficientnet-b7-dcc49843.pth',
     }
+
+
     def setup():
         """
         Create configs and perform basic setups.
@@ -749,33 +764,33 @@ if __name__ == "__main__":
         cfg.MODEL.EFFICIENTNET.NAME = name
         # cfg.MODEL.EFFICIENTNET.FEATURE_INDICES = [1, 4, 10, 15]
         cfg.freeze()
-        default_setup(cfg, {})
+        # default_setup(cfg, {})
         return cfg
 
 
     cfg = setup()
-    net = build_model(cfg)
-    source_state = load_state_dict_from_url(model_urls[name],
-                                            map_location=lambda storage, loc: storage, progress=True)
-    target_state = net.state_dict()
-    new_target_state = collections.OrderedDict()
-
-    for target_key, target_value in target_state.items():
-        if 'backbone.bottom_up' in target_key:
-            key = target_key.split('backbone.bottom_up.')
-            new_target_state[target_key] = source_state[key[1]]
-            print('loaded ',key[1])
-        else:
-            new_target_state[target_key] = target_state[target_key]
-            print('[WARNING] Not found pre-trained parameters for {}'.format(target_key))
-    print('load new state')
-    net.load_state_dict(new_target_state, strict=False)
-    # #
-    torch.save(net.state_dict(), "{}.pth".format(name))
+    # net = build_model(cfg)
+    # source_state = load_state_dict_from_url(model_urls[name],
+    #                                         map_location=lambda storage, loc: storage, progress=True)
+    # target_state = net.state_dict()
+    # new_target_state = collections.OrderedDict()
+    #
+    # for target_key, target_value in target_state.items():
+    #     if 'backbone.bottom_up' in target_key:
+    #         key = target_key.split('backbone.bottom_up.')
+    #         new_target_state[target_key] = source_state[key[1]]
+    #         print('loaded ', key[1])
+    #     else:
+    #         # new_target_state[target_key] = target_state[target_key]
+    #         print('[WARNING] Not found pre-trained parameters for {}'.format(target_key))
+    # print('load new state')
+    # net.load_state_dict(new_target_state, strict=False)
+    # # #
+    # torch.save(new_target_state, "{}.pth".format(name))
 
     #
     # inputs = torch.rand(1, 3, 224, 224)
-    # model = EfficientNet(cfg)
+    model = EfficientNet(cfg)
     # model.eval()
     # outputs = model(inputs)
     # print(model)

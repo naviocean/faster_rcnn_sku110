@@ -3,7 +3,7 @@ MODEL:
   BACKBONE:
     NAME: "build_efficientnet_fpn_backbone"
   EFFICIENTNET:
-    NAME: "efficientnet_b0" # efficientnet_b1, efficientnet_2,  ..., efficientnet_b7
+    NAME: "efficientnet-b0" # efficientnet_b1, efficientnet_2,  ..., efficientnet_b7
     OUT_FEATURES: ["stride4", "stride8", "stride16", "stride32"]
   FPN:
     IN_FEATURES: ["stride4", "stride8", "stride16", "stride32"]
@@ -32,7 +32,7 @@ MODEL:
     POOLER_RESOLUTION: 14
 DATASETS:
   TRAIN: ("sku110_train",)
-  TEST: ("sku110_val",)
+  TEST: ("sku110_test",)
 SOLVER:
   IMS_PER_BATCH: 2
   BASE_LR: 0.02

@@ -1,9 +1,9 @@
 _BASE_: "Base-RCNN-EfficientNet-FPN.yaml"
 MODEL:
-  WEIGHTS: "https://www.dropbox.com/s/f5v1umahqfv3e3u/efficientnet-b0-b18e8357.pth?dl=1"
+  WEIGHTS: "https://www.dropbox.com/s/lf8j8vlsdmir73s/efficientnet-b4-95c82349.pth?dl=1"
   MASK_ON: False
   EFFICIENTNET:
-    NAME: "efficientnet-b0" # efficientnet-b1, efficientnet-2,  ..., efficientnet-b7
+    NAME: "efficientnet-b4" # efficientnet_b1, efficientnet_2,  ..., efficientnet_b7
   RESNETS:
     DEPTH: 50
 DATALOADER:
@@ -15,4 +15,4 @@ SOLVER:
   LR_SCHEDULER_NAME: "WarmupCosineLR"
 TEST:
   EVAL_PERIOD: 5000
-OUTPUT_DIR: "checkpoints/FRCN-EfficientNet-B0-FPN-1x"
+OUTPUT_DIR: "checkpoints/FRCN-EfficientNet-B4-FPN-1x"

@@ -3,10 +3,10 @@ MODEL:
   BACKBONE:
     NAME: "build_mobilenetv2_fpn_backbone"
     FREEZE_AT: 0
-  RESNETS:
-    OUT_FEATURES: ["res2", "res3", "res4", "res5"]
+  MOBILENET:
+    OUT_FEATURES: ["stride4", "stride8", "stride16", "stride32"]
   FPN:
-    IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    IN_FEATURES: ["stride4", "stride8", "stride16", "stride32"]
   ANCHOR_GENERATOR:
     SIZES: [[32], [64], [128], [256], [512]]  # One size for each in feature map
     ASPECT_RATIOS: [[0.5, 1.0, 2.0]]  # Three aspect ratios (same for all in feature maps)

@@ -1,12 +1,15 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
   BACKBONE:
-    NAME: "build_hardnet_fpn_backbone"
-  HARDNET:
-    ARCH: 68
+    NAME: "build_ghostnet_fpn_backbone"
+    FREEZE_AT: 0
+  WEIGHTS: "https://www.dropbox.com/s/nbee7e91al8y2jq/ghostnet-0ab5afe4.pth?dl=1"
+  MASK_ON: False
+  GHOSTNET:
     OUT_FEATURES: ["stride4", "stride8", "stride16", "stride32"]
   FPN:
     IN_FEATURES: ["stride4", "stride8", "stride16", "stride32"]
+    OUT_CHANNELS: 128
   ANCHOR_GENERATOR:
     SIZES: [[32], [64], [128], [256], [512]]  # One size for each in feature map
     ASPECT_RATIOS: [[0.5, 1.0, 2.0]]  # Three aspect ratios (same for all in feature maps)
@@ -35,10 +38,12 @@ DATASETS:
   TEST: ("sku110_val",)
 SOLVER:
   IMS_PER_BATCH: 2
-  BASE_LR: 0.02
+  BASE_LR: 0.01
   STEPS: (60000, 80000)
   MAX_ITER: 90000
   CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000
 INPUT:
   MIN_SIZE_TRAIN: (640, 672, 704, 736, 768, 800)
-VERSION: 2
+OUTPUT_DIR: "checkpoints/FRCN-GhostNet-FPNLite-1x"

@@ -1,0 +1,25 @@
+_BASE_: "Base-RCNN-MobileNet-FPN.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_mobilenetv2_quantization_fpn_backbone"
+  WEIGHTS: "https://www.dropbox.com/s/1dk6jpqofbh3tt7/mobienet_v2_qnn_false-437ff604.pth?dl=1"
+  MOBILENET:
+    QUANTIZE: False
+  MASK_ON: False
+  FPN:
+    OUT_CHANNELS: 128
+DATALOADER:
+  NUM_WORKERS: 12
+DATASETS:
+  TRAIN: ("sku110_train",)
+  TEST: ("sku110_val",)
+SOLVER:
+  IMS_PER_BATCH: 2
+  BASE_LR: 0.01
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
+  CHECKPOINT_PERIOD: 5000
+  LR_SCHEDULER_NAME: "WarmupCosineLR"
+TEST:
+  EVAL_PERIOD: 5000
+OUTPUT_DIR: "checkpoints/FRCN-MNv2-Quantization-FPNLite-1x"
